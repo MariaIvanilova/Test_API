@@ -10,26 +10,23 @@ list_sub_breed = ["australian", "hound"]
 @pytest.mark.parametrize("breed", list_breed_should_be)
 def test_all_breeds(breed):
     response = dog_api.get_all_breeds()
-    if response.ok:
-        assert "message" in response.json(), "'message' key should by in json"
-        assert "status" in response.json(), "'status' key should by in json"
-        assert breed in response.json()["message"], f"{breed} should by in json"
-        assert "kelpie" in response.json()["message"]["australian"], (
-            "'kelpie' should by in json"
-        )
-        print("\ntests are executed")
-    else:
-        assert response.status_code == 200, (
-            f"status not 200, current status: {response.status_code}"
-        )
+    assert response.status_code == 200, (
+        f"status not 200, current status: {response.status_code}"
+    )
+    assert "message" in response.json(), "'message' key should by in json"
+    assert "status" in response.json(), "'status' key should by in json"
+    assert breed in response.json()["message"], f"{breed} should by in json"
+    assert "kelpie" in response.json()["message"]["australian"], (
+        "'kelpie' should by in json"
+    )
 
 
 def test_random_image():
     response = dog_api.get_random_image()
-    if response.ok:
-        assert response.json()["status"] == "success"
-    else:
-        assert response.status_code == 200
+    assert response.status_code == 200, (
+        f"status not 200, current status: {response.status_code}"
+    )
+    assert response.json()["status"] == "success"
 
 
 @pytest.mark.parametrize("breed", list_breed_should_be)
@@ -43,22 +40,27 @@ def test_by_breed(breed):
 @pytest.mark.parametrize("sub_breed", list_sub_breed)
 def test_by_sub_breed(sub_breed):
     response = dog_api.get_by_sub_breed(sub_breed)
+    print(response.json())
     assert response.json()["status"] == "success"
     assert isinstance(response.json()["message"], list)
     print("\n", response.json()["message"])
 
 
-@pytest.mark.parametrize(
-    ["breed", "is_positive"],
-    [("akita", True), ("unknown_breed", False)],
-    ids=["positive test", "negative test"],
-)
-def test_browse_breed_list(breed, is_positive):
-    response = dog_api.get_browse_breed_list(breed)
-    print("\n", response.text)
-    if is_positive:
-        assert "success" in response.text
-        assert response.status_code == 200
-    else:
-        assert response.status_code != 200
-        assert "Breed not found" in response.text
+def test_browse_breed_list_positive():
+    response = dog_api.get_browse_breed_list("akita")
+    assert response.status_code == 200, (
+        f"status not 200, current status: {response.status_code}"
+    )
+    assert response.json()["status"] == "success", (
+        f"incorrect status: {response.json()['status']}"
+    )
+
+
+def test_browse_breed_list_negative():
+    response = dog_api.get_browse_breed_list("not extisting breed")
+    assert response.status_code != 200, (
+        f"status should be not 200, current status: {response.status_code}"
+    )
+    assert response.json()["status"] == "error", (
+        f"incorrect status: {response.json()['status']}"
+    )

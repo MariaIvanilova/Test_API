@@ -19,31 +19,19 @@ def test_list_breweries(per_page):
     )
 
 
-@pytest.mark.parametrize(
-    ["id_", "is_positive"],
-    [(id_correct, True), (id_incorrect, False)],
-    ids=["positive test", "negative test"],
-)
-def test_single_brewery_positive_negative(id_, is_positive):
-    response = brewery_api.get_single_brewery(id_)
-    if is_positive:
-        print(
-            f"Positive test. Status code: {response.status_code}, id sent: {id_} == {response.json()['id']} "
-        )
-        assert response.status_code == 200, "status is not 200"
-        assert response.json()["id"] == id_, "id is not the same"
-    else:
-        print(
-            f"Negative test. Status code: {response.status_code}, message: {response.json()['message']}"
-        )
-        assert response.status_code != 200, "status should not be equal 200"
-        assert response.json()["message"] == "Couldn't find Brewery"
-
-
-def test_single_brewery():
-    response = brewery_api.get_single_brewery_new(id_correct)
+def test_single_brewery_positive():
+    response = brewery_api.get_single_brewery(id_correct)
     print(f"{response.id_} == {id_correct}")
     assert response.id_ == id_correct, "id is not the same"
+
+
+def test_single_brewery_negative():
+    response = brewery_api.get_single_brewery_without_dc(id_incorrect)
+    print(
+        f"Negative test. Status code: {response.status_code}, message: {response.json()['message']}"
+    )
+    assert response.status_code != 200, "status should not be equal 200"
+    assert response.json()["message"] == "Couldn't find Brewery"
 
 
 def test_random_brewery():

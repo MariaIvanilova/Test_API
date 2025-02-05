@@ -11,16 +11,22 @@ class BreweryApi:
         return requests.get(f"{self.base_url}", params=params)
 
     def get_single_brewery(self, id_):
-        return requests.get(f"{self.base_url}/{id_}")
+        response = requests.get(f"{self.base_url}/{id_}")
+        assert response.ok, (
+            f"status code should be 200, current status code = {response.status_code}"
+        )
+        return BreweryData.from_json(response.json())
 
-    def get_single_brewery_new(self, id_):
-        return BreweryData.from_json(requests.get(f"{self.base_url}/{id_}").json())
+    def get_single_brewery_without_dc(self, id_):
+        return requests.get(f"{self.base_url}/{id_}")
 
     def get_random_brewery(self):
         return requests.get(f"{self.base_url}/random")
 
     def get_breweries_by_country(self, country):
         params = {"by_country": country}
-        return BreweryData.from_json(
-            requests.get(f"{self.base_url}", params=params).json()[0]
+        response = requests.get(f"{self.base_url}", params=params)
+        assert response.ok, (
+            f"status code should be 200, current status code = {response.status_code}"
         )
+        return BreweryData.from_json(response.json()[0])
