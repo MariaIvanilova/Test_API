@@ -4,7 +4,6 @@ from dog_ceo.dog_api import DogApi
 dog_api = DogApi()
 
 list_breed_should_be = ["affenpinscher", "australian", "basenji"]
-list_sub_breed = ["australian", "hound"]
 
 
 @pytest.mark.parametrize("breed", list_breed_should_be)
@@ -32,18 +31,35 @@ def test_random_image():
 @pytest.mark.parametrize("breed", list_breed_should_be)
 def test_by_breed(breed):
     response = dog_api.get_by_breed(breed)
-    assert response.json()["status"] == "success"
-    assert "https://images.dog.ceo/breeds/" in response.json()["message"][0]
-    print("\n", response.json()["message"][0])
+    breed_response = response.json()
+    assert breed_response["status"] == "success", "status should by 'success'"
+    assert len(breed_response["message"]) > 0, "breed should contain at least 1 image"
+    for breed_image in breed_response["message"]:
+        assert breed in breed_image, (
+            f"expected {breed} should be in image {breed_image}"
+        )
 
 
-@pytest.mark.parametrize("sub_breed", list_sub_breed)
-def test_by_sub_breed(sub_breed):
-    response = dog_api.get_by_sub_breed(sub_breed)
-    print(response.json())
-    assert response.json()["status"] == "success"
-    assert isinstance(response.json()["message"], list)
-    print("\n", response.json()["message"])
+@pytest.mark.parametrize(
+    "breed, expected_sub_breed",
+    [
+        ("australian", ("kelpie", "shepherd")),
+        (
+            "hound",
+            ("afghan", "basset", "blood", "english", "ibizan", "plott", "walker"),
+        ),
+    ],
+)
+def test_by_sub_breed(breed, expected_sub_breed):
+    response = dog_api.get_by_sub_breed(breed)
+    sub_breed_data = response.json()
+    assert sub_breed_data["status"] == "success", "status should by 'success'"
+    assert len(sub_breed_data["message"]) > 0, (
+        f"{breed} should contain list of sub_breed"
+    )
+    assert tuple(sub_breed_data["message"]) == expected_sub_breed, (
+        f"incorrect expected sub_breed data for breed {breed}"
+    )
 
 
 def test_browse_breed_list_positive():
@@ -57,7 +73,7 @@ def test_browse_breed_list_positive():
 
 
 def test_browse_breed_list_negative():
-    response = dog_api.get_browse_breed_list("not extisting breed")
+    response = dog_api.get_browse_breed_list("not existing breed")
     assert response.status_code != 200, (
         f"status should be not 200, current status: {response.status_code}"
     )
